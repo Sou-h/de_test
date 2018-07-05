@@ -36,17 +36,17 @@ using namespace std;
 //------------------------------------------------------------
 // 設定パラメータ 実験時にこの部分を書き換える
 //------------------------------------------------------------
-#define MAXPSIZE		30			//最大個体数
-#define MAXGSIZE		100			//最大次元数（問題の次元数）
-#define FUNCNO		1					//最適化問題の種類
-#define RANGE		100				//最適化問題の定義域
-#define MRATE			0.9				//突然変異率
-#define CRATE			0.6				//交叉率
+#define MAXPSIZE	30			//最大個体数
+#define MAXGSIZE	30			//最大次元数（問題の次元数）
+#define FUNCNO		1				//最適化問題の種類
+#define RANGE		100			//最適化問題の定義域
+#define MRATE			0.9			//突然変異率
+#define CRATE			0.6			//交叉率
 #define MAXGENERATIO	1500	//最大繰り返し回数
-#define DE_ALGORITHM_NO	5			//DEのアルゴリズム
+#define DE_ALGORITHM_NO	5	//DEのアルゴリズム
 #define EXTIME			1				//試行回数
-#define TERMINATE		1.0e-70	//終了条件
-#define M_PI	3.14159265359
+#define TERMINATE		1.0e-90	//終了条件
+#define M_PI	3.141592653589793238462643383279
 //------------------------------------------------------------
 double cVect[MAXPSIZE][MAXGSIZE];				//時刻Tの個体（ベクトル）
 double cFitness[MAXPSIZE];							//時刻Tの個体の評価値
@@ -63,7 +63,8 @@ double gBestHistory[EXTIME][MAXGENERATIO];	//各試行におけるgBestの履歴
 double pDiversity[EXTIME][MAXGENERATIO];		//各試行における集団の多様性
 double Mrate[MAXPSIZE], cMrate = 0.0;
 double Crate[MAXPSIZE], cCrate = 0.0;
-double C = 0.1;	//JADE のパラメータ
+double C = 0.9;	//JADE のパラメータ
+FILE *Out_put_file4;
 
 int gTable[EXTIME];					//最適解発見時の世代数
 int sRate[EXTIME];					//最適解の発見率
@@ -86,6 +87,7 @@ double Sphere(double *x) {
 	for (i = 0; i<MAXGSIZE; i++) {
 		sum += x[i] * x[i];
 	}
+//	printf("%.90lf\n",sum);
 	return sum;
 }
 //------------------------------------------------------------
@@ -279,7 +281,8 @@ void Init_Vector(void)
 	r = RANGE;
 	for (i = 0; i<MAXPSIZE; i++) {
 		for (j = 0; j<MAXGSIZE; j++) {
-			cVect[i][j] = RANGE*(genrand_real1() * 2 - 1);
+			cVect[i][j] = r*(genrand_real1() * 2 - 1);//変更中
+			printf("%lf\n",cVect[i][j]);
 		}
 	}
 	//初期ベクトルをpBestVectorに保存する
@@ -406,6 +409,7 @@ void DE_Operation(int pop1)
 void Evaluate_New_Vector(int pop1)
 {
 	nFitness[pop1] = Calc_Objective_Function(nVect[pop1]);
+	fprintf(Out_put_file4, "%10.90f\t", nVect[pop1]);
 
 }
 //------------------------------------------------------------
@@ -440,7 +444,7 @@ void Select_Elite_Vector(int itime, int gtime)
 	for (i = 0; i<MAXGSIZE; i++)gBestVector[i] = cVect[num][i];
 	gBestFitness = cFitness[num];
 	gBestHistory[itime][gtime] = gBestFitness;
-	printf("%.70lf\n", gBestFitness);
+//	printf("%.90lf\n", gBestFitness);
 }
 
 
@@ -507,9 +511,6 @@ void New_parameter() {
 	Pameter_Filter(Sf, Scr);
 }
 
-
-
-
 //------------------------------------------------------------
 //ファイル出力1　最良値の推移
 //------------------------------------------------------------
@@ -528,7 +529,8 @@ void Output_To_File1(void)
 	fp = fopen(filename, "a");
 	for (i = 0; i<MAXGENERATIO; i++) {
 		for (j = 0; j<EXTIME; j++) {
-			fprintf(fp, "%15.70lf", gBestHistory[j][i]);
+			fprintf(fp, "%15.90lf", gBestHistory[j][i]);
+
 		}
 		fprintf(fp, "\n");
 	}
@@ -584,7 +586,7 @@ void Output_To_File2(void)
 	fp = fopen(filename, "a");
 	for (i = 0; i<MAXGENERATIO; i++) {
 		for (j = 0; j<EXTIME; j++) {
-			fprintf(fp, "%15.70lf", pDiversity[j][i]);
+			fprintf(fp, "%15.90lf", pDiversity[j][i]);
 		}
 		fprintf(fp, "\n");
 	}
@@ -610,6 +612,21 @@ void Output_To_File3(void)
 		fprintf(fp, "%6d %d\n", gTable[i], sRate[i]);
 	}
 }
+void Output_To_File4(void)
+{
+	register int i;
+
+	char filename[50];
+	time_t timer;
+	struct tm *t_st;
+	time(&timer);
+	t_st = localtime(&timer);
+	sprintf_s(filename, "DE_nFitness_%04d%02d%02d%02d%02d.txt",
+		t_st->tm_year + 1900, t_st->tm_mon + 1,
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min);
+	Out_put_file4= fopen(filename, "a");
+
+}
 //------------------------------------------------------------
 //メイン関数
 //------------------------------------------------------------
@@ -619,6 +636,7 @@ int main(void)
 	int iteration;
 	int pop;
 	init_genrand((unsigned)time(NULL));	//MTの初期化
+	Output_To_File4();
 	for (iteration = 0; iteration<EXTIME; iteration++) {
 		episode = 0;
 		Init_Vector();
@@ -633,6 +651,7 @@ int main(void)
 				Evaluate_New_Vector(pop);
 			}
 			Compare_Vector();
+			fprintf(Out_put_file4, "\n", nFitness[pop]);
 			episode++;
 		}
 		gTable[iteration] = episode;
@@ -643,6 +662,7 @@ int main(void)
 	Output_To_File1();
 	Output_To_File2();
 	Output_To_File3();
+	Output_To_File4();
 	getchar();
 	return 0;
 }

@@ -13,12 +13,12 @@
 #include <iostream>
 //#include <fstream>
 //#include <random>
-//#include "random.h"
+#include "random.h"
 
 using namespace std;
 
 // 以下はメルセンヌツイスターで使用する
-#include "MT.h"
+//#include "MT.h"
 //------------------------------------------------------------
 // メルセンヌツイスターで使用する関数の概説
 // genrand_int32() //符号なし32ビット長整数
@@ -26,7 +26,7 @@ using namespace std;
 // genrand_real1() //一様実乱数[0,1] (32ビット精度)
 // genrand_real2() //一様実乱数[0,1) (32ビット精度)
 // genrand_real3() //一様実乱数(0,1) (32ビット精度)
-// genrand_res53() //一様実乱数[0,1) (53ビット精度)
+// genrand_res53() //一様実乱数[0,1) (53ビット精si)
 //------------------------------------------------------------
 //------------------------------------------------------------
 // VisualStudioの場合は以下のコメントを外してコンパイル
@@ -36,17 +36,17 @@ using namespace std;
 //------------------------------------------------------------
 // 設定パラメータ 実験時にこの部分を書き換える
 //------------------------------------------------------------
-#define MAXPSIZE		30			//最大個体数
-#define MAXGSIZE		100			//最大次元数（問題の次元数）
-#define FUNCNO		1					//最適化問題の種類
-#define RANGE		100				//最適化問題の定義域
-#define MRATE			0.9				//突然変異率
-#define CRATE			0.6				//交叉率
-#define MAXGENERATIO	1500	//最大繰り返し回数
-#define DE_ALGORITHM_NO	5			//DEのアルゴリズム
-#define EXTIME			1				//試行回数
-#define TERMINATE		1.0e-70	//終了条件
-#define M_PI	3.14159265359
+#define MAXPSIZE						30		//最大個体数
+#define MAXGSIZE						20		//最大次元数（問題の次元数）
+#define FUNCNO							1			//最適化問題の種類
+#define RANGE							5.12		//最適化問題の定義域
+#define MRATE								0.9		//突然変異率
+#define CRATE								0.6		//交叉率
+#define MAXGENERATIO				1000		//最大繰り返し回数
+#define DE_ALGORITHM_NO		5			//DEのアルゴリズム
+#define EXTIME							1			//試行回数
+#define TERMINATE						1.0e-90//終了条件
+#define M_PI								3.141592653589793238462643383279
 //------------------------------------------------------------
 double cVect[MAXPSIZE][MAXGSIZE];				//時刻Tの個体（ベクトル）
 double cFitness[MAXPSIZE];							//時刻Tの個体の評価値
@@ -57,17 +57,18 @@ double gBestFitness;							//時刻Tにおける集団全体での最良解評価値の履歴
 double pVect1[MAXGSIZE];					//親ベクトル１
 double pVect2[MAXGSIZE];					//親ベクトル２
 double pVect3[MAXGSIZE];					//親ベクトル３
-double nVect[MAXPSIZE][MAXGSIZE];		//時刻T+1の個体（ベクトル）
-double nFitness[MAXPSIZE];					//時刻T+1の個体の評価値
+double nVect[MAXPSIZE][MAXGSIZE];	//時刻T+1の個体（ベクトル）
+double nFitness[MAXPSIZE];				//時刻T+1の個体の評価値
 double gBestHistory[EXTIME][MAXGENERATIO];	//各試行におけるgBestの履歴
 double pDiversity[EXTIME][MAXGENERATIO];		//各試行における集団の多様性
-double Mrate[MAXPSIZE], cMrate = 0.0;
-double Crate[MAXPSIZE], cCrate = 0.0;
+double Mrate[MAXPSIZE], cMrate = 0.5;
+double Crate[MAXPSIZE], cCrate = 0.5;
 double C = 0.1;	//JADE のパラメータ
+FILE *Out_put_file4;
 
-int gTable[EXTIME];					//最適解発見時の世代数
-int sRate[EXTIME];					//最適解の発見率
-double gBestTable[EXTIME];		//終了時点でのgBestの値
+int gTable[EXTIME];				//最適解発見時の世代数
+int sRate[EXTIME];				//最適解の発見率
+double gBestTable[EXTIME];//終了時点でのgBestの値
 //------------------------------------------------------------
 //------------------------------------------------------------
 // [min, max]の一様乱数
@@ -85,7 +86,11 @@ double Sphere(double *x) {
 	double sum = 0.0;
 	for (i = 0; i<MAXGSIZE; i++) {
 		sum += x[i] * x[i];
+//		fprintf(Out_put_file4, "%10.90lf\t",x[i]);
 	}
+//	fprintf(Out_put_file4, "\n");
+
+//	printf("%.90lf\n",sum);
 	return sum;
 }
 //------------------------------------------------------------
@@ -95,16 +100,18 @@ double Sphere(double *x) {
 double Rosenbrock(double *x) {
 	int i;
 	double sum = 0.0;
-	/*
+	
 	for (i = 0; i<MAXGSIZE - 1; i++){
-	sum += 100 * (x[i + 1] - x[i] * x[i])*(x[i + 1] - x[i] * x[i]) + (x[i] - 1.0)*(x[i] - 1.0);
+		sum += 100 * (x[i + 1] - x[i] * x[i])*(x[i + 1] - x[i] * x[i]) + (x[i] - 1.0)*(x[i] - 1.0);
 	}
-	*/
+	
 	// UNDXの文献の式に統一
 	// Rosenbrock関数 Star型
+/*
 	for (i = 2; i<MAXGSIZE; i++) {
 		sum += (100 * (x[0] - x[i] * x[i])*(x[0] - x[i] * x[i]) + (x[1] - 1.0)*(x[1] - 1.0));
 	}
+	*/
 	return sum;
 }
 //------------------------------------------------------------
@@ -248,6 +255,14 @@ double N2_Minima(double *x) {
 	}
 	return (sum / 2);
 }
+double F9(double *x) {
+	int i;
+	double sum1 = 0, sum2 = 0;
+	for (i = 0; i<MAXGSIZE; i++) {
+		sum1 += x[i] * x[i] - 10 * cos(2 * M_PI*x[i])+10;
+	}
+	return (sum1);
+}
 //------------------------------------------------------------
 // 目的関数値を計算
 //------------------------------------------------------------
@@ -267,6 +282,7 @@ double Calc_Objective_Function(double *x)
 	else if (FUNCNO == 12)return Shifted_Rastrigin(x);
 	else if (FUNCNO == 13)return Cigar(x);
 	else if (FUNCNO == 14)return N2_Minima(x);
+	else if (FUNCNO == 15)return F9(x);
 	else exit(0);
 }
 //------------------------------------------------------------
@@ -279,7 +295,8 @@ void Init_Vector(void)
 	r = RANGE;
 	for (i = 0; i<MAXPSIZE; i++) {
 		for (j = 0; j<MAXGSIZE; j++) {
-			cVect[i][j] = RANGE*(genrand_real1() * 2 - 1);
+			cVect[i][j] = r*(genrand_real1() * 2 - 1);//変更中
+			printf("%lf\n",cVect[i][j]);
 		}
 	}
 	//初期ベクトルをpBestVectorに保存する
@@ -288,6 +305,9 @@ void Init_Vector(void)
 			pBestVector[i][j] = cVect[i][j];
 		}
 	}
+	for (int i = 0; i < MAXGSIZE;i++) {
+		Mrate[i] = 0.5;
+	}
 }
 //------------------------------------------------------------
 // 初期集団の評価（目的関数値を適応度として利用）
@@ -295,7 +315,8 @@ void Init_Vector(void)
 void Evaluate_Init_Vector(void) {
 	int i;
 	for (i = 0; i<MAXPSIZE; i++) {
-		cFitness[i] = Calc_Objective_Function(cVect[i]);
+		nFitness[i]=cFitness[i] = Calc_Objective_Function(cVect[i]);
+
 		//初期値を初期pBestとして保存
 		pBestFitness[i] = cFitness[i];
 	}
@@ -316,6 +337,46 @@ void Select_pVector(int pop1)
 	for (i = 0; i<MAXGSIZE; i++)pVect2[i] = cVect[pop3][i];
 	for (i = 0; i<MAXGSIZE; i++)pVect3[i] = cVect[pop4][i];
 }
+
+void Pameter_Filter(double Sf, double Scr) {
+	int i,count1=0,count2=0;
+//	printf("%lf\t%lf\n", cMrate,Sf);
+//	printf("%lf\t%lf\n",cCrate,Scr);
+//	getchar();
+	for (i = 0; i < MAXPSIZE; i++) {
+	reMrate:
+//		count1++;
+		Mrate[i] = rand_cauchy(cMrate, Sf); if (Mrate[i]>1.0 || Mrate[i]<0.0) goto	reMrate;
+	reCrate:
+//		count2++;
+		Crate[i] = rand_normal(cCrate, Scr*Scr);
+//		printf("Crate[%d]=%lf\n", i, Crate[i]);
+		if (Crate[i]>1.0 || Crate[i]<0.0) goto	reCrate;
+
+	}
+//	printf("count1=%d\tcount2=%d\n", count1-MAXPSIZE, count2-MAXPSIZE);
+}
+
+
+//パラメータの更新	JADE 作成中
+void New_parameter() {
+	int i;
+	double Sn = 0.0, Sf = 0.0, Sf2 = 0.0, Scr = 0.0;
+	for (i = 0; i < MAXPSIZE; i++) {
+		if (fabs(nVect[i][MAXPSIZE])	>	fabs(cVect[i][MAXPSIZE])) {
+			Sn += 1;
+			Sf += Mrate[i];
+			Sf2 += Mrate[i] * Mrate[i];
+			Scr += Crate[i];
+		}
+	}
+	if (Sn != 0) {
+		cMrate = (1 - C)*cMrate + (C*Sf2 / Sf);
+		cCrate = (1 - C)*cCrate +  ((C*Scr) / Sn);
+	}
+	Pameter_Filter(Sf, Scr);
+}
+
 //------------------------------------------------------------
 //DEの操作
 //------------------------------------------------------------
@@ -381,13 +442,15 @@ void DE_Operation(int pop1)
 			N = (N + 1) % MAXGSIZE;
 		}
 	}
-	//JADE	DE/curreny-to-pbest/1
+
+//JADE	DE/curreny-to-pbest/1
 	else if (DE_ALGORITHM_NO == 5) {
-		for (i = 0; i<MAXGSIZE; i++) nVect[pop1][i] = cVect[pop1][i];
+		for (i = 0; i<MAXGSIZE; i++) nVect[pop1][i] = cVect[pop1][i]; 
 		N = (int)(genrand_real1()*MAXGSIZE);
 		for (L = 0; L<MAXGSIZE; L++) {
-			if (L == 0 || genrand_real1() < CRATE) {
-				nVect[pop1][N] = pVect1[pop1] + Mrate[pop1] * (gBestVector[N] - pVect1[N]) + Mrate[pop1] * (pVect1[pop1] - pVect2[pop1]);	//変更中
+			if (L == 0 || genrand_real1() < Crate[i]) {
+//				nVect[pop1][N] = pVect1[pop1] + Mrate[N] * (gBestVector[N] - pVect1[N]) + Mrate[N] * (pVect1[N] - pVect2[N]);
+				nVect[pop1][N] = pVect1[pop1] + Mrate[pop1] * (gBestVector[N] - pVect1[N]) + Mrate[pop1] * (pVect1[pop1] - pVect2[pop1]);
 				if (nVect[pop1][N] < -RANGE) nVect[pop1][N] = pVect1[N] + genrand_real1() * (-RANGE - pVect1[N]);
 				if (nVect[pop1][N] >  RANGE) nVect[pop1][N] = pVect1[N] + genrand_real1() * (RANGE - pVect1[N]);
 			}
@@ -396,6 +459,7 @@ void DE_Operation(int pop1)
 			}
 			N = (N + 1) % MAXGSIZE;
 		}
+		New_parameter(); //JADE関数の中に入れるべき
 	}
 	else exit(0);
 }
@@ -416,7 +480,7 @@ void Compare_Vector(void)
 	int i, j;				//繰返し用変数.
 	for (i = 0; i<MAXPSIZE; i++) {
 		//新しいベクトルが良ければ置き換え操作を行う
-		if (nFitness[i] < cFitness[i]) {
+		if (abs(nFitness[i]) < abs(cFitness[i])) {//変更中------------------------------------------------------------------------------------------------------------------------------
 			cFitness[i] = nFitness[i];
 			for (j = 0; j<MAXGSIZE; j++)cVect[i][j] = nVect[i][j];
 		}
@@ -431,8 +495,8 @@ void Select_Elite_Vector(int itime, int gtime)
 	int i;						//繰返し用変数.
 	int num;				//添字
 	double best;			//一時保存用
-	for (i = 0, num = 0, best = cFitness[0]; i<MAXPSIZE; i++) {
-		if (cFitness[i]<best) {
+	for (i = 0, num = 0, best = cFitness[0]; i<MAXPSIZE; i++) {//best=cFitnessが怪しい-----------------------------------------------------------------------------------------------------
+		if (abs(cFitness[i])<abs(best)) {//変更中-----------------------------------------------------------------------------------------------------------------
 			best = cFitness[i];
 			num = i;
 		}
@@ -440,19 +504,8 @@ void Select_Elite_Vector(int itime, int gtime)
 	for (i = 0; i<MAXGSIZE; i++)gBestVector[i] = cVect[num][i];
 	gBestFitness = cFitness[num];
 	gBestHistory[itime][gtime] = gBestFitness;
-	printf("%.70lf\n", gBestFitness);
+//	fprintf(Out_put_file4, "%lf\n",gBestFitness);
 }
-
-
-//分布の生成
-double rand_cauchy(double mu, double gamma) {
-	return mu + gamma * tan(M_PI*(genrand_real1() - 0.5));
-}
-double rand_normal(double mu, double sigma) {
-	double z = sqrt(-2.0*log(genrand_real1())) * sin(2.0*M_PI*genrand_real3());
-	return mu + sigma * z;
-}
-
 
 //JADE 作成中
 /*
@@ -478,37 +531,6 @@ void Pameter_Filter(double Sf, double Scr) {
 	}
 }
 */
-void Pameter_Filter(double Sf, double Scr) {
-	int i;
-	for (i = 0; i < MAXPSIZE; i++) {
-	reMrate:
-		Mrate[i] = rand_cauchy(cMrate, Sf);; if (Mrate[i]>1 || Mrate[i]<0) goto	reMrate;
-	reCrate:
-		Crate[i] = rand_normal(cCrate, Scr*Scr); if (Mrate[i]>1 || Mrate[i]<0) goto	reMrate;
-	}
-}
-
-
-//パラメータの更新	JADE 作成中
-void New_parameter() {
-	int i;
-	double Sn = 0, Sf = 1.0, Sf2 = 0, Scr = 1.0;
-	for (i = 0; i < MAXPSIZE; i++) {
-		if (fabs(nVect[i][MAXPSIZE])	>	fabs(cVect[i][MAXPSIZE])) {
-			Sn += 1;
-			Sf2 += Mrate[i] * Mrate[i];
-			Scr += Crate[i];
-		}
-	}
-	if (Sn != 0) {
-		cMrate = (1 - C)*cMrate + (C*Sf2 / Sf);
-		cCrate = (1 - C)*cCrate + ((C*Scr) / Sn);
-	}
-	Pameter_Filter(Sf, Scr);
-}
-
-
-
 
 //------------------------------------------------------------
 //ファイル出力1　最良値の推移
@@ -517,18 +539,24 @@ void Output_To_File1(void)
 {
 	int i, j;							//繰返し用変数.
 	FILE *fp;						//ファイルポインタ
-	char filename[50];		//ファイル名
+	char filename[100];		//ファイル名
 	time_t timer;				//時間計測用
 	struct tm *t_st;			//時間計測用
 	time(&timer);				//時間の取得
 	t_st = localtime(&timer);	//時間の変換
+/*
 	sprintf_s(filename, "DE_gBestHistory%04d%02d%02d%02d%02d.txt",
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
 		t_st->tm_mday, t_st->tm_hour, t_st->tm_min);
+*/
+	sprintf_s(filename, "DE_gBestHistory,世代数%d要素数%d,次元%d,問題%d,time%02d.txt"
+					,MAXGENERATIO,MAXGSIZE,MAXPSIZE,FUNCNO, t_st->tm_min);
+
 	fp = fopen(filename, "a");
 	for (i = 0; i<MAXGENERATIO; i++) {
 		for (j = 0; j<EXTIME; j++) {
-			fprintf(fp, "%15.70lf", gBestHistory[j][i]);
+			fprintf(fp, "%15.80lf\t", gBestHistory[j][i]);
+
 		}
 		fprintf(fp, "\n");
 	}
@@ -582,14 +610,15 @@ void Output_To_File2(void)
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
 		t_st->tm_mday, t_st->tm_hour, t_st->tm_min);
 	fp = fopen(filename, "a");
-	for (i = 0; i<MAXGENERATIO; i++) {
-		for (j = 0; j<EXTIME; j++) {
-			fprintf(fp, "%15.70lf", pDiversity[j][i]);
+	for (i = 0; i < MAXGENERATIO; i++) {
+		for (j = 0; j < EXTIME; j++) {
+			fprintf(fp, "%15.80lf\t", pDiversity[j][i]);
 		}
 		fprintf(fp, "\n");
 	}
 	fprintf(fp, "\n");
 }
+
 //------------------------------------------------------------
 //ファイル出力3　最適解発見世代，収束率
 //------------------------------------------------------------
@@ -610,29 +639,53 @@ void Output_To_File3(void)
 		fprintf(fp, "%6d %d\n", gTable[i], sRate[i]);
 	}
 }
+void Output_To_File4(void)
+{
+	register int i;
+
+	char filename[50];
+	time_t timer;
+	struct tm *t_st;
+	time(&timer);
+	t_st = localtime(&timer);
+	sprintf_s(filename, "DE_nFitness_%04d%02d%02d%02d%02d.txt",
+		t_st->tm_year + 1900, t_st->tm_mon + 1,
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min);
+	Out_put_file4= fopen(filename, "a");
+
+}
+
 //------------------------------------------------------------
 //メイン関数
 //------------------------------------------------------------
+
+
 int main(void)
 {
+	clock_t Strat, End;
+	Strat = clock();
 	int episode;
 	int iteration;
 	int pop;
+	double time_minute;
 	init_genrand((unsigned)time(NULL));	//MTの初期化
+//	Output_To_File4();
 	for (iteration = 0; iteration<EXTIME; iteration++) {
+		printf("試行回数=%d\n", iteration);
 		episode = 0;
 		Init_Vector();
 		Evaluate_Init_Vector();
 		while (episode<MAXGENERATIO) {
 			Select_Elite_Vector(iteration, episode);
-			Calc_Diversity(iteration, episode);
+//			Calc_Diversity(iteration, episode);
+			printf("試行回数%d\t世代数%d\n",iteration,episode);
 			for (pop = 0; pop<MAXPSIZE; pop++) {
 				Select_pVector(pop);
 				DE_Operation(pop);
-				New_parameter(); //JADE関数の中に入れるべき
 				Evaluate_New_Vector(pop);
 			}
-			Compare_Vector();
+//			fprintf(Out_put_file4, "\n");
+			Compare_Vector();//変更中
 			episode++;
 		}
 		gTable[iteration] = episode;
@@ -643,6 +696,10 @@ int main(void)
 	Output_To_File1();
 	Output_To_File2();
 	Output_To_File3();
+//	getchar();
+	End = clock();
+	time_minute = (double)((End - Strat) / CLOCKS_PER_SEC) / 60;
+	printf("%f分かかりました\n",time_minute);
 	getchar();
 	return 0;
 }

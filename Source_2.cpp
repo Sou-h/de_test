@@ -36,7 +36,7 @@
 #define CRATE			0.6				//交叉率
 #define MAXGRNRATION	5000		//最大繰り返し回数
 #define DE_ALGORITHM_NO	1	//DEのアルゴリズム
-#define EXTIME			10				//試行回数
+#define EXTIME			20				//試行回数
 #define Terminate		1.0e-55			//終了条件
 
 //-----------------------------------------------------------
@@ -370,7 +370,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 			if (nVect[i_Np][N] >  Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
 			N = (N + 1) % d;
 			L++;
-		} while (genrand_real1() < CRATE && L < d);
+		} while (genrand_real1() < CR[i] && L < d);
 	}
 	//DE/rand/1/bin
 	else if (DeAlgorithmNo == 3) {
@@ -408,9 +408,9 @@ void DE_Operation(int i_Np, int g_GSIZE)
 	else if (DeAlgorithmNo == 5) {
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		for (L = 0; L < d; L++) {
-			if (L == 0 || genrand_real1() < CR[i]) {
+			if (L == 0 || genrand_real1() > CR[i]) {
 				nVect[i_Np][L] = cVect[i_Np][L] + F[i_Np] * (gBestVector[L] - cVect[i_Np][L]) + F[i_Np] * (pVect1[L] - pVect2[L]);
-				if (nVect[i_Np][N] < -Range) nVect[i_Np][L] = -Range;
+				if (nVect[i_Np][L] < -Range) nVect[i_Np][L] = -Range;
 				if (nVect[i_Np][L] > Range) nVect[i_Np][L] = Range;
 			}
 			else {
@@ -418,22 +418,19 @@ void DE_Operation(int i_Np, int g_GSIZE)
 			}
 		}
 	}
-	//JADE	DE/curreny-to-pbest/1
+	//JADE	DE/rand/exp
 	else if (DeAlgorithmNo == 6) {
+		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
-		for (L = 0; L < d; L++) {
-			if (L == 0 || genrand_real1() < CR[i]) {
+			do{
 				//nVect[i_Np][N] = pVect1[i_Np] + Mrate[i_Np] * (gBestVector[N] - pVect1[N]) + Mrate[i_Np] * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
 				nVect[i_Np][N] = cVect[i_Np][N] + F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[i_Np] - pVect2[i_Np]);
-				if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = -Range;
-				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = Range;
-			}
-			else {
-				nVect[i_Np][N] = cVect[i_Np][N];
-			}
-			N = (N + 1) % d;
-		}
+				if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
+				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
+				N = (N + 1) % d;
+				L++;
+			}while (genrand_real1() < CR[i] && L < d);
 	}
 		//JADE	DE/curreny-to-pbest/1
 	else if (DeAlgorithmNo == 7) {
@@ -452,7 +449,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 			}
 			N = (N + 1) % d;
 		}
-		}
+	}
 	else exit(0);
 }
 
@@ -644,7 +641,7 @@ void New_parameter() {
 	int i;
 	double Sn = 0.0, Sf = 0.0, Sf2 = 0.0, Scr = 0.0;
 	for (i = 0; i < Np; i++) {
-		if (fabs(nVect[i][Np])	>	fabs(cVect[i][Np])) {
+		if (fabs(nVect[i][D])	>	fabs(cVect[i][D])) {
 			Sn += 1;
 			Sf += F[i];
 			Sf2 += F[i] * F[i];
@@ -657,8 +654,8 @@ void New_parameter() {
 //		printf("Ucr%lf Uf%lf\n",Ucr,Uf);
 	}
 	else {
-//		Ucr = 0.1;
-//		Uf = 0.1;
+		Ucr = 0.1;
+		Uf = 0.1;
 		printf("何もなかった\n%d\n",Func_No);
 //		getchar();
 	}
@@ -678,7 +675,7 @@ void Parameter_Initialization() {
 int main(void)
 {
 	for (DeAlgorithmNo = 5; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
-		for (Func_No = 1; Func_No <= 4; Func_No++) {
+		for (Func_No = 3; Func_No <= 4; Func_No++) {
 			if(DeAlgorithmNo ==5)	Output_To_File4();
 			printf("DeAlgorithmNo=%d\nFunc_No=%d\n", DeAlgorithmNo, Func_No);
 			int episode;

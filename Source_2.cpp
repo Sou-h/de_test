@@ -29,15 +29,15 @@
 //------------------------------------------------------------
 
 #define NP	30				//最大個体数
-#define D		30				//最大次元数（問題の次元数）
+#define D		20				//最大次元数（問題の次元数）
 #define FUNC_NO		1					//最適化問題の種類
 #define RANGE		5.12				//最適化問題の定義域
-#define MRATE			0.8				//突然変異率
-#define CRATE			0.6				//交叉率
-#define MAXGRNRATION	5000		//最大繰り返し回数
+#define MRATE			0.7				//突然変異率0.9
+#define CRATE			0.3				//交叉率
+#define MAXGRNRATION	3000		//最大繰り返し回数
 #define DE_ALGORITHM_NO	1	//DEのアルゴリズム
-#define EXTIME			50		//試行回数
-#define Terminate		1.0e-55			//終了条件
+#define EXTIME			10		//試行回数
+#define Terminate		1.0e-20			//終了条件
 
 //-----------------------------------------------------------
 int Np = NP;				//最大個体数
@@ -46,13 +46,14 @@ int Func_No = FUNC_NO;					//最適化問題の種類
 double Range = RANGE;				//最適化問題の定義域
 int MaxGrnration = MAXGRNRATION;		//最大繰り返し回数
 int DeAlgorithmNo = DE_ALGORITHM_NO;	//DEのアルゴリズム
-//------------------------------------------------------------
+										//------------------------------------------------------------
 double cVect[NP][D];				//時刻Tの個体（ベクトル）
 double cFitness[NP];				//時刻Tの個体の評価値
 double pBestVector[NP][D];	//時刻Tにおける各個体の最良解の履歴
 double pBestFitness[NP];		//時刻Tにおける各個体の最良解評価値の履歴
 double gBestVector[D];			//時刻Tにおける集団全体での最良解の履歴
 double gBestFitness;				//時刻Tにおける集団全体での最良解評価値の履歴
+double cBestFitness;					//時刻T-1における全体の最良値
 double pVect1[D];					//親ベクトル１
 double pVect2[D];					//親ベクトル２
 double pVect3[D];					//親ベクトル３
@@ -66,13 +67,16 @@ double gBestTable[EXTIME];		//終了時点でのgBestの値
 double C = 0.1;							//JADE のパラメータ
 double Ucr = 0.5;
 double Uf = 0.5;
-double Sf[NP];
-double Scr[NP];
+double Uf_best = 0.9,Uf_rand=0.9;
+//double Sf_best[NP],Sf_rand[NP];
+//double Scr[NP];
 double CR[NP];
 double F[NP];
+double F_best[NP], F_rand[NP];
 double average_F = 0, average_CR = 0, average_Sn = 0;
 FILE *fp_4;					//ファイルポインタ
 char filename_4[100];			//ファイル名
+int No_best_sum = 1;
 
 
 //------------------------------------------------------------
@@ -102,16 +106,18 @@ double Sphere(double *x) {
 double Rosenbrock(double *x) {
 	int i;
 	double sum = 0.0;
-	/*
+
 	for (i = 0; i<d - 1; i++){
 	sum += 100 * (x[i + 1] - x[i] * x[i])*(x[i + 1] - x[i] * x[i]) + (x[i] - 1.0)*(x[i] - 1.0);
 	}
-	*/
+
 	// UNDXの文献の式に統一
 	// Rosenbrock関数 Star型
+	/*
 	for (i = 2; i<d; i++) {
 		sum += (100 * (x[0] - x[i] * x[i])*(x[0] - x[i] * x[i]) + (x[1] - 1.0)*(x[1] - 1.0));
 	}
+	*/
 	return sum;
 }
 //------------------------------------------------------------
@@ -296,19 +302,20 @@ void Init_Vector(void)
 			pBestVector[i][j] = cVect[i][j];
 		}
 	}
+
 }
 
 void vRange() {
 	if (Func_No == 1)		Range = 100;
-	else if (Func_No == 2) Range=30;
-	else if (Func_No == 3) Range=5.12;
-	else if (Func_No == 4) Range=600;
-	else if (Func_No == 5) Range=32.768;
-	else if (Func_No == 6) Range=500;
-	else if (Func_No == 9) Range=100;
-	else if (Func_No == 10) Range =5.12;
+	else if (Func_No == 2) Range = 30;
+	else if (Func_No == 3) Range = 5.12;
+	else if (Func_No == 4) Range = 600;
+	else if (Func_No == 5) Range = 32.768;
+	else if (Func_No == 6) Range = 500;
+	else if (Func_No == 9) Range = 100;
+	else if (Func_No == 10) Range = 5.12;
 	else {
-		printf("Rangeにあうパラメータが設定されていません\nFunc_No=%d",Func_No);
+		printf("Rangeにあうパラメータが設定されていません\nFunc_No=%d", Func_No);
 		exit(0);
 	}
 
@@ -353,34 +360,111 @@ void New_parameter() {
 			Sf += F[i];
 			Sf2 += F[i] * F[i];
 			Scr += CR[i];
-//			if (cFitness[i] < gBestFitness) hoge_fp += 1;
-//			printf("nfit%lf,gBest%f\n", cFitness[i], gBestFitness);
+//			printf("F=%lf\n",F[i]);
+			//			if (cFitness[i] < gBestFitness) hoge_fp += 1;
+			//			printf("nfit%lf,gBest%f\n", cFitness[i], gBestFitness);
 		}
 	}
 
-//	Pameter_Filter(Sf, Scr);
-//	printf("hoge_fp=%lf\n", hoge_fp);
-//	if (Sn > 10) {
+	//	Pameter_Filter(Sf, Scr);
+	//	printf("hoge_fp=%lf\n", hoge_fp);
+	//	if (Sn > 10) {
 	if (Sn != 0) {
-//		Ucr = Sn / Np;
-//		Uf = Sn / Np;
+		//		Ucr = Sn / Np;
+		//		Uf = Sn / Np;
 		Ucr = (1 - C)*Ucr + C * ((Scr / Sn));
 		Uf = (1 - C)*Uf + C * (Sf2 / Sf);
-//		Ucr = (1 - C)*Ucr + C * (Sf2 / Sf);
-//		Uf = (1 - C)*Uf + C * ((Scr / Sn));
-//		printf("Sf2=%lf Sf=%lf\n", Sf2, Sf);
-//		printf("cScr=%lf cSf2=%lf\n",C* Sf2/Sf,C*Scr/Sn);
-//		printf("Ucr%lf Uf%lf\n", Ucr, Uf);
-//		printf("Sn=%.0lf\n", Sn);
+		//		Ucr = (1 - C)*Ucr + C * (Sf2 / Sf);
+		//		Uf = (1 - C)*Uf + C * ((Scr / Sn));
+		//		printf("Sf2=%lf Sf=%lf\n", Sf2, Sf);
+		//		printf("cScr=%lf cSf2=%lf\n",C* Sf2/Sf,C*Scr/Sn);
+		//		printf("Ucr%lf Uf%lf\n", Ucr, Uf);
+		//		printf("Sn=%.0lf\n", Sn);
+
 
 	}else {
-//		printf("何もなかった\t%d\n",Func_No);
-//		printf("Sn=%.0lf\n", Sn);
+//		Uf += 0.05;
+//		Ucr += -0.01;
+	}
+/*
+	if (No_best_sum >= 20) {
+//		Uf = genrand_real3();
+		No_best_sum = 0;
+		printf("Best=%.20f\n",Best_History);
+//		printf("停滞中\n");
 //		getchar();
 	}
-//	Ucr = 0.3;
-//	Uf = 0.3;
+	else {
+
+	}
+	if (No_best_sum > 50) {
+		getchar();
+	}
+	*/
 }
+
+
+//パラメータの更新	JADE 作成中
+void New_parameter_2() {
+	int i, j;
+	double Sn = 0.0,Scr = 0.0,Sn_best=0;
+	double Sf_rand = 0,Sf_rand_2=0;
+	double Sf_best = 0, Sf_best_2=0;
+	bool hoge_fp = 0;
+	for (i = 0; i < Np; i++) {
+		if (cBestFitness > cFitness[i]) {
+			Sf_best += F_best[i];
+			Sf_best_2 += F_best[i] * F_best[i];
+			hoge_fp = 1;
+			Sn_best += 1;
+		}
+		if (nFitness[i] > cFitness[i]) {
+			Sn += 1;
+			Sf_rand += F_rand[i];
+			Sf_rand_2 += F_rand[i] * F_rand[i];
+			Scr += CR[i];
+		}
+	}
+
+	if (Sn != 0) {
+		Ucr = (1 - C)*Ucr + C * ((Scr / Sn));
+		Uf_rand = (1 - C)*Uf_rand + C * (Sf_rand_2 / Sf_rand);
+	}
+	else {
+		Uf_rand -=0.01;
+	}
+
+	if (hoge_fp != 0) {
+		Uf_best = (1 - C)*Uf_best + C * (Sf_best_2 / Sf_best);
+//		Uf_best = (1 - C)*Uf_best + C * (Sf_best/Sn_best);
+	}
+	else {
+		Uf_best += 0.01;
+	}
+
+/*
+	if (gBestFitness==cBestFitness) {
+		No_best_sum += 1;
+	}
+	else {
+		No_best_sum = 0;
+	}
+	if (No_best_sum >= 1000) {
+//		Uf_best = -0.1;
+//		Uf_rand = 1 - Uf_rand;
+//		getchar();
+		No_best_sum = 0;
+	}
+*/
+	if (Uf_rand > 0.95) {
+		Uf_rand = 0.95;
+	}
+	if (Uf_best > 0.95) {
+		Uf_best = 0.95;
+	}
+
+}
+
 //パラメータの更新
 void Parameter_Format() {
 	int i = 0;
@@ -402,30 +486,69 @@ void Parameter_Format() {
 
 	}
 
-/*
-			F[i] = rand_cauchy(Uf, 0.1);
-			if (F[i] > 1) F[i] = 1;
-			if (F[i] < 0) F[i] = 1.0e-10;
+	/*
+	F[i] = rand_cauchy(Uf, 0.1);
+	if (F[i] > 1) F[i] = 1;
+	if (F[i] < 0) F[i] = 1.0e-10;
 
-			CR[i] =rand_normal(Ucr, 0.1);
-			if (CR[i] > 1) CR[i] = 1;
-			if (CR[i] < 0) CR[i] = 1.0e-10;
+	CR[i] =rand_normal(Ucr, 0.1);
+	if (CR[i] > 1) CR[i] = 1;
+	if (CR[i] < 0) CR[i] = 1.0e-10;
 
 	}
-*/
-	average_F = sum_F / Np;
-	average_CR = sum_CR / Np;
+	*/
+//	average_F = sum_F / Np;
+//	average_CR = sum_CR / Np;
 
 	//	if (DeAlgorithmNo == 5) fprintf(fp_4, "%lf\t%lf\n", average_F, average_CR);
 
 }
+
+void Parameter_Format_2() {
+	int i = 0;
+	double sum_F = 0, sum_CR = 0;
+
+	//	printf("F=%lf\n",F[i]);
+	//	printf("CR=%lf\n", CR[i]);
+	for (i = 0; i < Np; i++) {
+
+		F_best[i] = rand_cauchy(Uf_best, 0.5);
+		if (F_best[i] > 0.95) {
+			F_best[i] = 0.95;
+		}
+		else if (F_best[i] < -0.95){
+			F_best[i] = -0.95;
+		}
+//			if (F_best[i] == 0.000) F_best[i] = 0.001;
+
+			F_rand[i] = rand_cauchy(Uf_rand, 0.5);
+			if (F_rand[i] > 0.9) {
+				F_rand[i] = 0.9;
+			}
+			else 	if (F_rand[i] < 0.1) {
+				F_rand[i] = 0.1;
+			}
+
+			CR[i] = rand_normal(Ucr, 0.2);
+			if (CR[i] > 0.9) {
+				CR[i] = 0.9;
+			}
+			else if (CR[i] < 0.1) {
+				CR[i] = 0.1;
+			}
+	}
+
+}
+
 //パラメータの初期化
 void Parameter_Initialization() {
 	int i;
 	for (i = 0; i < Np; i++) {
-		F[i] = 0.5;
+		F[i] = 0.85;
 		CR[i] = 0.5;
 	}
+	Uf = 0.85;
+	Ucr = 0.5;
 }
 
 //------------------------------------------------------------
@@ -442,8 +565,8 @@ void DE_Operation(int i_Np, int g_GSIZE)
 		L = 0;
 		do {
 			nVect[i_Np][N] = pVect1[N] + MRATE * (pVect2[N] - pVect3[N]);
-			if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
-			if (nVect[i_Np][N] >  Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
+			if (nVect[i_Np][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
+			if (nVect[i_Np][N] > Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
 			N = (N + 1) % d;
 			L++;
 		} while (genrand_real1() < CRATE && L < d);
@@ -459,7 +582,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 			if (nVect[i_Np][N] >  Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
 			N = (N + 1) % d;
 			L++;
-		} while (genrand_real1() < CR[i] && L < d);
+		} while (genrand_real1() < CRATE && L < d);
 	}
 	//DE/rand/1/bin
 	else if (DeAlgorithmNo == 3) {
@@ -478,7 +601,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 		}
 	}
 	//DE/best/1/bin
-	else if (DeAlgorithmNo == 4) {
+/*	else if (DeAlgorithmNo == 4) {
 		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
 		for (L = 0; L<d; L++) {
@@ -494,46 +617,61 @@ void DE_Operation(int i_Np, int g_GSIZE)
 		}
 
 	}
+	*/
 	//JADE/rand/1/bin
-	else if (DeAlgorithmNo == 5) {
+	else if (DeAlgorithmNo == 6) {
+		Parameter_Format();
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		for (L = 0; L < d; L++) {
 			if (L == 0 || genrand_real1() > CR[i]) {
-				nVect[i_Np][N] = cVect[i_Np][N] + F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]);
-//				nVect[i_Np][N] = pVect1[N] + MRATE * (pVect2[N] - pVect3[N]);
+				//nVect[i_Np][N] = cVect[i_Np][N] + F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]);
+				nVect[i_Np][N] = pVect1[N] + MRATE * (pVect2[N] - pVect3[N]);
 				if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
 				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
-			}else {
+			}
+			else {
 				nVect[i_Np][N] = cVect[i_Np][N];
-//				nVect[i_Np][N] = nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
+				//				nVect[i_Np][N] = nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
 			}
 			N = (N + 1) % d;
 		}
 		New_parameter();
 	}
 	//JADE	DE/rand/exp
-	else if (DeAlgorithmNo == 6) {
+	else if (DeAlgorithmNo == 5) {
+		Parameter_Format();
 		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
-			do{
-				//nVect[i_Np][N] = pVect1[i_Np] + Mrate[i_Np] * (gBestVector[N] - pVect1[N]) + Mrate[i_Np] * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
-				nVect[i_Np][N] = cVect[i_Np][N] + F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[i_Np] - pVect2[i_Np]);
-				if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
+		do {
+			if (genrand_real1()<CR[i_Np] || L == 0) {
+//				nVect[i_Np][N] = pVect1[i_Np] + (1-F[i_Np]) * (gBestVector[N] - pVect1[N]) + (F[i_Np]-1) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
+//				nVect[i_Np][N] = pVect1[i_Np] + (F[i_Np]-1) * (gBestVector[N] - cVect[i_Np][N]) + (1 - F[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
+//				nVect[i_Np][N] = pVect1[i_Np] + (1-F[i_Np]) * (gBestVector[N] - cVect[i_Np][N]) + ( F[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中																																					//				nVect[i_Np][N] = pVect1[i_Np] + (F[i_Np]-1) * (gBestVector[N] - pVect1[N]) + (1-F[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
+				nVect[i_Np][N] = cVect[i_Np][N] + F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]);
+//				nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]))/2;
+				if (nVect[i_Np][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
 				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
-				N = (N + 1) % d;
-				L++;
-			}while (genrand_real1() < CR[i] && L < d);
-			New_parameter();
+			}
+			else {
+				nVect[i_Np][N] = cVect[i_Np][N];
+				//				nVect[i_Np][N] = nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
+			}
+
+			N = (N + 1) % d;
+			L++;
+		} while (L < d);
+		New_parameter();
 	}
-		//JADE	DE/curreny-to-pbest/1
+	//JADE	DE/curreny-to-pbest/1
 	else if (DeAlgorithmNo == 7) {
+		Parameter_Format();
 		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
 		L = 0;
 		i = 0;
 		do {
-			nVect[i_Np][N] = pVect1[N] + F[i] * (pVect2[N] - pVect3[N]);
+			nVect[i_Np][N] = cVect[i_Np][N] + F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]);
 			if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
 			if (nVect[i_Np][N] >  Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
 			N = (N + 1) % d;
@@ -541,6 +679,45 @@ void DE_Operation(int i_Np, int g_GSIZE)
 			i++;
 		} while (genrand_real1() < CR[i] && L < d);
 		New_parameter();
+	}
+	else 	if (DeAlgorithmNo == 8) {
+		Parameter_Format();
+		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
+		N = (int)(genrand_real1()*d);
+		L = 0;
+		do {
+			nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
+			if (nVect[i_Np][N] < -Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
+			if (nVect[i_Np][N] >  Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
+			N = (N + 1) % d;
+			L++;
+		} while (genrand_real1() < CR[i]  && L < d);
+		New_parameter();
+	}
+	//JADE	DE/rand/exp
+	else if (DeAlgorithmNo == 9) {
+		Parameter_Format_2();
+		L = 0;
+		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
+		N = (int)(genrand_real1()*d);
+		do {
+			if (genrand_real1() < CR[N] || L == 0) {
+//				nVect[i_Np][N] = pVect1[i_Np] + (F_best[i_Np]) * (gBestVector[N] - cVect[i_Np][N]) + (1-F_rand[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
+				nVect[i_Np][N] = pVect1[i_Np] + (F_best[i_Np]) * (gBestVector[N] - pVect1[i_Np]) + (1 - F_rand[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
+//				nVect[i_Np][N] = cVect[i_Np][N] +  (F_rand[N]) * (gBestVector[N] - cVect[i_Np][N]) + (1- F_rand[N]) * (pVect1[N] - pVect2[N]);	//変更中
+//				nVect[i_Np][N] = cVect[i_Np][N] + (0.9)* (gBestVector[N] - cVect[i_Np][N]); +(0.1) * (pVect1[N] - pVect2[N]);	//変更中
+//				nVect[i_Np][N] = pVect1[N] + (F_rand[N]) * (pVect2[N] - pVect3[N]);	//変更中
+				if (nVect[i_Np][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
+				if (nVect[i_Np][N] > Range)		nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
+			}
+			else {
+//				nVect[i_Np][N] = cVect[i_Np][N];
+				}
+				N = (N + 1) % d;
+				L++;
+			
+			} while (L < d);
+			New_parameter_2();
 	}
 	else exit(0);
 }
@@ -575,20 +752,15 @@ void Select_Elite_Vector(int itime, int gtime)
 	int i;					//繰返し用変数.
 	int num;			//添字
 	double best;		//一時保存用
-	int Ucr_fg = 0;
+	cBestFitness = gBestFitness;
 	for (i = 0, num = 0, best = cFitness[0]; i<Np; i++) {
 		if (cFitness[i]<best) {
 			best = cFitness[i];
 			num = i;
-			Ucr_fg = 1;
 		}
+
 	}
-	if (Ucr_fg == 0) {
-//		Ucr = 0.3;
-//		Uf = 0.9;
-//		getchar();
-//		printf("失敗");
-	}
+
 	for (i = 0; i<d; i++) gBestVector[i] = cVect[num][i];
 	gBestFitness = cFitness[num];
 	gBestHistory[itime][gtime] = gBestFitness;
@@ -608,15 +780,15 @@ void Output_To_File1(void)
 	t_st = localtime(&timer);	//時間の変換
 	sprintf_s(filename, "DE_gBestHistory%04d%02d%02d%02d%02d_DE_NO%d_FUNC_NO%d_C%lf.txt",
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
-		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No,C);
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, C);
 	fp = fopen(filename, "a");
 	for (i = 0; i<MaxGrnration; i++) {
-		for (j = 0; j<EXTIME; j++) {
-			fprintf(fp, "%20.60lf\t", gBestHistory[j][i]);
+		for (j = 0; j < EXTIME; j++) {
+			fprintf(fp, "%20.20lf\t", gBestHistory[j][i]);
 		}
 		fprintf(fp, "\n");
 	}
-	fprintf(fp, "\n");
+
 	fclose(fp);
 
 }
@@ -691,7 +863,7 @@ void Output_To_File3(void)
 	t_st = localtime(&timer);
 	sprintf_s(filename, "DE_sRate_gTable%04d%02d%02d%02d%02d_DE_NO%d_FUNC_NO%d_c=%lf.txt",
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
-		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No,C);
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, C);
 	fp = fopen(filename, "a");
 	for (i = 0; i<EXTIME; i++) {
 		fprintf(fp, "%6d %d\n", gTable[i], sRate[i]);
@@ -707,7 +879,7 @@ void Output_To_File4(void)
 	t_st = localtime(&timer);	//時間の変換
 	sprintf_s(filename_4, "DE_CR%04d%02d%02d%02d%02d_DE_NO%d_FUNC_NO%dC%lf.txt",
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
-		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No,C);
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, C);
 	fp_4 = fopen(filename_4, "a");
 
 
@@ -719,9 +891,9 @@ void Output_To_File4(void)
 //------------------------------------------------------------
 int main(void)
 {
-	for (DeAlgorithmNo = 2; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
-		for (Func_No =1; Func_No <= 4; Func_No++) {
-	//		if(DeAlgorithmNo ==5)	Output_To_File4();
+	for (Func_No = 1; Func_No <= 4; Func_No++) {
+		for (DeAlgorithmNo = 9; DeAlgorithmNo <= 9; DeAlgorithmNo++) {
+//			if(DeAlgorithmNo ==5)	Output_To_File4();
 			printf("DeAlgorithmNo=%d\nFunc_No=%d\n", DeAlgorithmNo, Func_No);
 			int episode;
 			int iteration;
@@ -731,6 +903,7 @@ int main(void)
 			init_genrand((unsigned)time(NULL));	//MTの初期化
 			for (iteration = 0; iteration < EXTIME; iteration++) {
 				episode = 0;
+				No_best_sum = 0;
 				Init_Vector();
 				Evaluate_Init_Vector();
 				Parameter_Initialization();
@@ -738,15 +911,15 @@ int main(void)
 					Select_Elite_Vector(iteration, episode);
 					Calc_Diversity(iteration, episode);
 					for (pop = 0; pop < Np; pop++) {
-						Parameter_Format();
 						Select_pVector(pop);
 						DE_Operation(pop, episode);
 						Evaluate_New_Vector(pop);
+						printf("%d Ucr%lf Uf_best%lf Uf_rand%lf \n", episode, Ucr, Uf_best,Uf_rand);
 					}
-//					printf("%d\nUcr%lf Uf%lf\n", episode, Ucr, Uf);
 					Compare_Vector();
-//					printf("CR%lf\tF%lf\n", average_CR, average_F);
+					//printf("CR%lf\tF%lf\n", average_CR, average_F);
 					episode++;
+	//				if (Terminate > gBestFitness) break;
 				}
 
 				gTable[iteration] = episode;
@@ -757,11 +930,11 @@ int main(void)
 			Output_To_File1();
 			//Output_To_File2();
 			//Output_To_File3();
-//			if (DeAlgorithmNo == 5) fclose(fp_4);
+			//			if (DeAlgorithmNo == 5) fclose(fp_4);
 		}
 
 	}
-//	printf("end\n");
-//	getchar();
+	//	printf("end\n");
+	//	getchar();
 	return 0;
 }

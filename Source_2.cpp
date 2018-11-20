@@ -32,8 +32,8 @@
 #define D		20				//最大次元数（問題の次元数）
 #define FUNC_NO		1					//最適化問題の種類
 #define RANGE		5.12				//最適化問題の定義域
-#define MRATE			0.7				//突然変異率0.9
-#define CRATE			0.3				//交叉率
+#define MRATE			0.8				//突然変異率0.9
+#define CRATE			0.5				//交叉率
 #define MAXGRNRATION	1000		//最大繰り返し回数
 #define DE_ALGORITHM_NO	1	//DEのアルゴリズム
 #define EXTIME			10		//試行回数
@@ -128,7 +128,7 @@ double Rosenbrock(double *x) {
 //------------------------------------------------------------
 double Rastrigin(double *x) {
 	int i;
-	double sum1 = 0, sum2 = 0;
+	double sum1 = 0.0, sum2 = 0.0;
 	for (i = 0; i<d; i++) {
 		sum1 += x[i] * x[i] - 10 * cos(2 * M_PI*x[i]);
 	}
@@ -165,7 +165,8 @@ double Schwefel(double *x) {
 	for (i = 0, sum = 0.0; i<d; i++) {
 		sum += x[i] * sin(sqrt(fabs(x[i])));
 	}
-	return (sum + 418.9828872724338 * d);
+	printf("%lf\n",sum);
+	return (418.9828872724338 * d - sum);
 }
 //------------------------------------------------------------
 // F7 Ridge関数
@@ -173,7 +174,7 @@ double Schwefel(double *x) {
 double Ridge(double *x) {
 	int i, j;
 	double sum1, sum2;
-	for (i = 0, sum1 = 0; i<d; i++) {
+	for (i = 0, sum1 = 0.0; i<d; i++) {
 		for (j = 0, sum2 = 0; j <= i; j++) {
 			sum2 += x[j];
 		}
@@ -264,6 +265,7 @@ double N2_Minima(double *x) {
 	}
 	return (sum / 2);
 }
+
 //------------------------------------------------------------
 // 目的関数値を計算
 //------------------------------------------------------------
@@ -283,7 +285,26 @@ double Calc_Objective_Function(double *x)
 	else if (Func_No == 12)return Shifted_Rastrigin(x);
 	else if (Func_No == 13)return Cigar(x);
 	else if (Func_No == 14)return N2_Minima(x);
-	else exit(0);
+	else {
+		getchar();
+		exit(0);
+	}
+}
+void vRange() {
+	if (Func_No == 1)		Range = 100;
+	else if (Func_No == 2) Range = 30;
+	else if (Func_No == 3) Range = 5.12;
+	else if (Func_No == 4) Range = 600;
+	else if (Func_No == 5) Range = 32.768;
+	else if (Func_No == 6) Range = 500;
+	else if (Func_No == 9) Range = 100;
+	else if (Func_No == 10) Range = 5.12;
+	else {
+		printf("Rangeにあうパラメータが設定されていません\nFunc_No=%d", Func_No);
+		getchar();
+		exit(0);
+	}
+
 }
 //------------------------------------------------------------
 //初期個体群の生成
@@ -292,7 +313,7 @@ void Init_Vector(void)
 {
 	int i, j;		//繰り返し用変数
 	double r;		//定義域用変数
-	void vRange();
+	vRange();
 	r = Range;
 	for (i = 0; i<Np; i++) {
 		for (j = 0; j<d; j++) {
@@ -308,21 +329,7 @@ void Init_Vector(void)
 
 }
 
-void vRange() {
-	if (Func_No == 1)		Range = 100;
-	else if (Func_No == 2) Range = 30;
-	else if (Func_No == 3) Range = 5.12;
-	else if (Func_No == 4) Range = 600;
-	else if (Func_No == 5) Range = 32.768;
-	else if (Func_No == 6) Range = 500;
-	else if (Func_No == 9) Range = 100;
-	else if (Func_No == 10) Range = 5.12;
-	else {
-		printf("Rangeにあうパラメータが設定されていません\nFunc_No=%d", Func_No);
-		exit(0);
-	}
 
-}
 //------------------------------------------------------------
 // 初期集団の評価（目的関数値を適応度として利用）
 //------------------------------------------------------------
@@ -454,8 +461,8 @@ void New_parameter_2() {
 		No_best_sum = 0;
 	}
 */
-	if (Uf_rand > 0.95) {
-		Uf_rand = 0.95;
+	if (Uf_rand > 0.9) {
+		Uf_rand = 0.9;
 	}
 	if (Uf_best > 0.9) {
 		Uf_best = 0.9;
@@ -513,16 +520,16 @@ void Parameter_Format_2() {
 	//	printf("CR=%lf\n", CR[i]);
 	for (i = 0; i < Np; i++) {
 
-		F_best[i] = rand_cauchy(Uf_best, 0.5);
+		F_best[i] = rand_cauchy(Uf_best, 1);
 		if (F_best[i] > 0.9) {
 			F_best[i] = 0.9;
 		}
-		else if (F_best[i] < -0.9){
-			F_best[i] = -0.9;
+		else if (F_best[i] < 0.1){
+			F_best[i] = 0.1;
 		}
 //			if (F_best[i] == 0.000) F_best[i] = 0.001;
 
-			F_rand[i] = rand_cauchy(Uf_rand, 0.5);
+			F_rand[i] = rand_cauchy(Uf_rand, 1);
 			if (F_rand[i] > 0.9) {
 				F_rand[i] = 0.9;
 			}
@@ -733,6 +740,8 @@ void DE_Operation(int i_Np, int g_GSIZE)
 		do {
 			if (genrand_real1() < CR[N] || L == 0) {
 				nVect[i_Np][N] = pVect1[i_Np] + (F_best[i_Np]) * (gBestVector[i_Np] - pVect1[i_Np]) + (1-F_rand[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);
+//				printf("%lf\n",nVect[i_Np][N]);
+				//nVect[i_Np][N] = pVect1[N] + (F_best[N]) * (gBestVector[N] - pVect1[N]) + (1 - F_rand[N]) * (pVect1[N] - pVect2[N]);
 				//nVect[i_Np][N] = pVect1[N] + (F_best[i_Np]) * (gBestVector[N] - pVect1[N]) + (F_rand[i_Np] ) * (pVect2[N] - pVect3[N]);
 				//nVect[i_Np][N] = pVect1[i_Np] + (F_best[i_Np]) * (gBestVector[N] - cVect[i_Np][N]) + (1-F_rand[i_Np]) * (pVect1[i_Np] - pVect2[i_Np]);	//変更中
 //				nVect[i_Np][N] = cVect[i_Np][N] + (F_best[i_Np]) * (gBestVector[i_Np] - cVect[i_Np][N]) + (1-F_rand[i_Np] ) * (pVect2[N] - pVect3[N]);		//完成
@@ -942,7 +951,6 @@ void Output_To_File5(void)
 	for (i = 0; i <MaxGrnration ; i++) {
 		for (j = 0; j <EXTIME; j++) {
 			fprintf(fp, "%.5lf\t", Uf_best_History[j][i]);
-			printf("%lf\n", Uf_best_History[j][i]);
 		}
 		fprintf(fp, "\n");
 	}
@@ -956,8 +964,8 @@ void Output_To_File5(void)
 //------------------------------------------------------------
 int main(void)
 {
-	for (Func_No = 1; Func_No <= 4; Func_No++) {
-		for (DeAlgorithmNo = 5; DeAlgorithmNo <= 10; DeAlgorithmNo+=5) {
+	for (Func_No = 1; Func_No <= 6; Func_No++) {
+		for (DeAlgorithmNo = 10; DeAlgorithmNo <= 10; DeAlgorithmNo++) {
 //			if(DeAlgorithmNo ==5)	Output_To_File4();
 			printf("DeAlgorithmNo=%d\nFunc_No=%d\n", DeAlgorithmNo, Func_No);
 			int pop;
@@ -1010,8 +1018,8 @@ int main(void)
 			//Output_To_File2();
 			//Output_To_File3();
 			if (DeAlgorithmNo == 10) {
-				Output_To_File4();
-				Output_To_File5();
+//				Output_To_File4();
+//				Output_To_File5();
 			}
 		}
 

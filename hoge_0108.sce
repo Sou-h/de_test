@@ -3,11 +3,12 @@ M1 = csvRead('C:\Users\itolab\Desktop\homoto\冬休み\jade_improbement\de_inter
 
 
 x=size(M1)
-sum_data=zeros(1,x(1,1));
+ave_data=zeros(1,x(1,1));
 
 for i=1:x(1,1)
     for j=1:x(1,2)-1
-    sum_data(1,i)=sum_data(1,i)+M1(i,j)
+        ave_data(1,i)=ave_data(1,i)+M1(i,j)
     end
+    ave_data(1,i)=ave_data(1,i)/(x(1,2)-1)
 end
 

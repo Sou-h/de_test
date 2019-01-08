@@ -10,7 +10,7 @@
 
 // 以下はメルセンヌツイスターで使用する
 #define NP	100	//最大個体数
-#define D		20				//最大次元数（問題の次元数）
+#define D		30				//最大次元数（問題の次元数）
 #define FUNC_NO		1					//最適化問題の種類
 #define RANGE			5.12				//最適化問題の定義域
 #define MRATE			0.3				//突然変異率0.9
@@ -18,12 +18,12 @@
 #define MAXGRNRATION	150000		//最大繰り返し回数
 #define DE_ALGORITHM_NO	1	//DEのアルゴリズム
 #define EXTIME			10		//試行回数
-#define Terminate		1.0e-60			//終了条件
+#define Terminate		1.0e-11			//終了条件
 #define Fl 0.1
 #define Fu 0.9
 #define Tf 0.29
 #define Tcr 0.24
-#define P_BEST	0.05 //上位p%の評価値を用いる
+#define P_BEST 0.05		//標準は0.05(5%)
 
 //------------------------------------------------------------
 
@@ -66,9 +66,9 @@ void Output_To_File1(void)
 	struct tm *t_st;			//時間計測用
 	time(&timer);				//時間の取得
 	t_st = localtime(&timer);	//時間の変換
-	sprintf_s(filename, "DE_gBestHistory%04d%02d%02d%02d%02d_DE_NO%d_FUNC_NO%d_C%lf.csv",
+	sprintf_s(filename, "DE_gBestHistory%04d%02d%02d%02d%02d_DE_NO%d_FUNC_NO%d_NP%d_D%d_C%lf.csv",
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
-		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, C);
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No,Np,d, C);
 	fp = fopen(filename, "a");
 	for (i = 0; i<MaxGrnration; i++) {
 		for (j = 0; j < EXTIME; j++) {
@@ -216,9 +216,9 @@ int main(void)
 	int pop;
 	int J_rand = 0;
 	int j = 0, i = 0;
-	p_best_NP = (int)(NP*P_BEST);
+	p_best = (int)(NP*P_BEST);
 	for (Func_No = 1; Func_No <= 4; Func_No++) {
-		for (DeAlgorithmNo = 5; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
+		for (DeAlgorithmNo = 1; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
 			//if(DeAlgorithmNo ==5)	Output_To_File4();
 			printf("DeAlgorithmNo=%d\nFunc_No=%d\n", DeAlgorithmNo, Func_No);
 			pop=0,J_rand = 0,j = 0,i = 0;

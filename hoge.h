@@ -41,8 +41,7 @@ char filename_4[100];			//ファイル名
 int No_best_sum = 1;
 int episode;
 int iteration;
-int p_best_NP; //上位P_BEST%の評価のベクトルを用いる
-
+int p_best;
 
 void vRange() {
 	if (Func_No == 1) {
@@ -51,16 +50,15 @@ void vRange() {
 	}
 	else if (Func_No == 2) {
 		Range = 30;
-		MaxGrnration = 1000;
-//10000		4000		5000
+		MaxGrnration = 20000;
 	}
 	else if (Func_No == 3) {
 		Range = 5.12;
-		MaxGrnration = 1000;
+		MaxGrnration = 4000;
 	}
 	else if (Func_No == 4) {
 		Range = 600;
-		MaxGrnration = 1000;
+		MaxGrnration = 5000;
 	}
 	else if (Func_No == 5) {
 		Range = 32.768;
@@ -125,7 +123,7 @@ double Rosenbrock(double *x) {
 	sum += (100 * (x[0] - x[i] * x[i])*(x[0] - x[i] * x[i]) + (x[1] - 1.0)*(x[1] - 1.0));
 	}
 	*/
-	return sum;
+	return sum-3.98662385;
 }
 //------------------------------------------------------------
 // F3 Rastrigin関数
@@ -692,7 +690,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 	//DE/rand/1/exp
 	if (DeAlgorithmNo == 1) {
 		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
-		N = (int)(genrand_real1()*d);
+		N = (int)(genrand_real2()*d);
 		L = 0;
 		do {
 			nVect[i_Np][N] = pVect1[N] +MRATE * (pVect2[N] - pVect3[N]);
@@ -705,7 +703,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 	//DE/best/1/exp
 	else if (DeAlgorithmNo == 2) {
 		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
-		N = (int)(genrand_real1()*d);
+		N = (int)(genrand_real2()*d);
 		L = 0;
 		do {
 			nVect[i_Np][N] = gBestVector[N] + MRATE * (pVect2[N] - pVect3[N]);
@@ -718,7 +716,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 	//DE/rand/1/bin
 	else if (DeAlgorithmNo == 3) {
 		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
-		N = (int)(genrand_real1()*d);
+		N = (int)(genrand_real2()*d);
 		for (L = 0; L<d; L++) {
 			if (L == 0 || genrand_real1() < CRATE) {
 				nVect[i_Np][N] = pVect1[N] + MRATE * (pVect2[N] - pVect3[N]);
@@ -734,7 +732,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 	//DE/best/1/bin
 	else if (DeAlgorithmNo == 4) {
 		for (i = 0; i<d; i++) nVect[i_Np][i] = cVect[i_Np][i];
-		N = (int)(genrand_real1()*d);
+		N = (int)(genrand_real2()*d);
 		for (L = 0; L<d; L++) {
 			if (L == 0 || genrand_real1() < CRATE) {
 				nVect[i_Np][N] = gBestVector[N] + MRATE * (pVect2[N] - pVect3[N]);
@@ -759,7 +757,8 @@ void DE_Operation(int i_Np, int g_GSIZE)
 //		printf("best_P%d\n",best_rand_N);
 		do {
 			if (genrand_real1()<CR[i_Np] || L == 0) {
-				nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np])* (cVect[p_best_NP][N] - cVect[i_Np][N] + (F[i_Np])* (pVect1[N] - pVect2[N]));
+				best_rand_N = (int)(genrand_real2()*p_best);
+				nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np])* (cVect[best_rand_N][N] - cVect[i_Np][N] + (F[i_Np])* (pVect1[N] - pVect2[N]));
 				//nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]))/2;
 				if (nVect[N][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
 				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
@@ -775,7 +774,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 
 	}
 	//JADE/exp
-	else if (DeAlgorithmNo == 6) {
+	else if (DeAlgorithmNo == 8) {
 
 		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
@@ -818,8 +817,8 @@ void DE_Operation(int i_Np, int g_GSIZE)
 
 	}
 	//jde
-	else if (DeAlgorithmNo == 8) {
-
+	else if (DeAlgorithmNo == 6) {
+/*
 		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
@@ -836,6 +835,28 @@ void DE_Operation(int i_Np, int g_GSIZE)
 			L++;
 
 		} while (L < d);
+*/
+		L = 0;
+		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
+		N = (int)(genrand_real1()*d);
+		//printf("best_P%d\n",best_rand_N);
+		do {
+			if (genrand_real1()<CR[i_Np] || L == 0) {
+				best_rand_N = (int)(genrand_real2()*p_best);
+				nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np])* (cVect[best_rand_N][N] - cVect[i_Np][N] + (F[i_Np])* (pVect1[N] - pVect2[N]));
+				//nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]))/2;
+				if (nVect[N][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
+				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
+			}
+			else {
+				nVect[i_Np][N] = cVect[i_Np][N];
+				//nVect[i_Np][N] = nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
+			}
+
+			N = (N + 1) % d;
+			L++;
+		} while (L < d);
+
 
 	}
 	else exit(0);

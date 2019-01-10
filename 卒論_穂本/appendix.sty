@@ -1,0 +1,73 @@
+\appendix
+
+\setcounter{equation}{0}
+\setcounter{figure}{0}
+\setcounter{table}{0}
+
+\makeatletter
+     \renewcommand{\theequation}{%
+          A.\arabic{equation}}
+     \@addtoreset{equation}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\thetable}{%
+          A.\arabic{table}}
+     \@addtoreset{table}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\thefigure}{%
+          A.\arabic{figure}}
+     \@addtoreset{figure}{section}
+\makeatother
+
+% ================================================
+\makeatletter
+     \renewcommand{\thesubsection}{%
+          A.\arabic{subsection}}
+     \@addtoreset{subsection}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\thesubsubsection}{%
+          A.\arabic{subsection}.\arabic{subsubsection}}
+     \@addtoreset{subsubsection}{section}
+\makeatother
+
+% ================================================
+\makeatletter
+     \renewcommand{\theproblem}{%
+          A.\arabic{problem}}
+     \@addtoreset{problem}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\theexample}{%
+          A.\arabic{example}}
+     \@addtoreset{example}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\thetheorem}{%
+          A.\arabic{theorem}}
+     \@addtoreset{theorem}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\thedefinition}{%
+          A.\arabic{definition}}
+     \@addtoreset{definition}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\thelemma}{%
+          A.\arabic{lemma}}
+     \@addtoreset{lemma}{section}
+\makeatother
+
+\makeatletter
+     \renewcommand{\theprogram}{%
+          A.\arabic{program}}
+     \@addtoreset{program}{section}
+\makeatother

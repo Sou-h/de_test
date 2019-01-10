@@ -1,0 +1,84 @@
+\documentclass[11pt]{jarticle}
+
+
+%%%%%%% スタイルファイル %%%%%%%%%%%%%%%%%%%%%%
+\usepackage{gra2e}
+
+% \usepackage{graphicx}   % eps 形式の図版取り込みのため
+\usepackage[dvipdfmx]{graphicx}   % pdf 形式の図版取り込みのため
+\usepackage{ascmac}
+\usepackage{multicol}
+\usepackage{amsmath,amssymb}
+
+\usepackage{here}
+\usepackage{eclbkbox}
+\usepackage{indent}
+\usepackage{arydshln}
+
+\usepackage{url}
+
+\usepackage{color}
+\definecolor{lightgray}{gray}{0.85}
+\definecolor{darkgray}{gray}{0.25}
+
+
+\usepackage{framed}
+\definecolor{shadecolor}{gray}{0.85}
+\newenvironment{lightgrayleftbar}{%
+  \def\FrameCommand{\hspace{3zw}\textcolor{lightgray}{\vrule width 1mm}\hspace{-0.75zw}}% 
+  \MakeFramed {\advance\hsize-\width \FrameRestore}}%
+{\endMakeFramed}
+
+\usepackage{moreverb}
+%\def\listinglabel#1{\llap{\scriptsize\ttfamily\the#1}\hskip\listingoffset\relax}
+\def\listinglabel#1{\llap{\color{darkgray}{\scriptsize\sffamily\the#1}}\hskip\listingoffset\relax}
+
+
+
+\begin{document}
+
+%-------------------------------------------------------------------------%
+\thispagestyle{empty}
+\input{temp.tex}
+\newpage
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+%%%%%%%%%%% 要旨 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{abst.tex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+%%%%%%%%%%% 目次 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tableofcontents         %% 目次 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+%-------------------------------------------------------------------------%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%　本文　%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{1章.tex} \newpage
+\input{2章.tex} \newpage
+\input{3章.tex} \newpage
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%　参考文献　%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{ref.tex} \newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%　謝辞　%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{thanks.tex} \newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%　付録　%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{appendix.tex} \newpage
+
+\end{document}

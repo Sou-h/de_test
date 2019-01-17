@@ -1,7 +1,7 @@
 #pragma once
 
 //-----------------------------------------------------------
-int Np =NP;				//最大個体数
+int Np = NP;				//最大個体数
 int d = D;		//最大次元数（問題の次元数）
 int Func_No = FUNC_NO;					//最適化問題の種類
 double Range = RANGE;				//最適化問題の定義域
@@ -123,7 +123,7 @@ double Rosenbrock(double *x) {
 	sum += (100 * (x[0] - x[i] * x[i])*(x[0] - x[i] * x[i]) + (x[1] - 1.0)*(x[1] - 1.0));
 	}
 	*/
-	return sum-3.98662385;
+	return sum - 3.98662385;
 }
 //------------------------------------------------------------
 // F3 Rastrigin関数
@@ -440,7 +440,7 @@ void New_parameter_2() {
 		//		Uf_best = (1 - C)*Uf_best + C * (Sf_best/Sn_best);
 	}
 	else {
-		printf("UF_best=%f\n", Uf_best);
+//		printf("UF_best=%f\n", Uf_best);
 		Uf_best -= 0.01;
 	}
 	if (Uf_rand > 0.9) {
@@ -543,7 +543,7 @@ void Parameter_Initialization() {
 	Uf_best = 0.5;
 }
 
-void swap(double *a,double *b) {
+void swap(double *a, double *b) {
 	double c;
 	c = *a;
 	*a = *b;
@@ -564,25 +564,25 @@ void vnVect(int arry_num1, int arry_num2) {
 void vcVect(int arry_num1, int arry_num2) {
 	int i;
 	double arry_data[D];
-/*	for (i = 0; i < d; i++) {
-		printf("変化前cVect[%d][%d]=%0.10f\n", arry_num1, i, cVect[arry_num1][i]);
+	/*	for (i = 0; i < d; i++) {
+	printf("変化前cVect[%d][%d]=%0.10f\n", arry_num1, i, cVect[arry_num1][i]);
 	}
 	for (i = 0; i < d; i++) {
-		printf("変化前cVect[%d][%d]=%0.10f\n", arry_num2, i, cVect[arry_num2][i]);
+	printf("変化前cVect[%d][%d]=%0.10f\n", arry_num2, i, cVect[arry_num2][i]);
 	}
 	printf("\n");
-*/
+	*/
 	for (i = 0; i < D; i++) {
 		arry_data[i] = cVect[arry_num1][i];
 		cVect[arry_num1][i] = cVect[arry_num2][i];
 		cVect[arry_num2][i] = arry_data[i];
 	}
-/*
+	/*
 	for (i = 0; i < d; i++) {
-		printf("変化後cVect[%d][%d]=%0.10f\n", arry_num1, i, cVect[arry_num1][i]);
+	printf("変化後cVect[%d][%d]=%0.10f\n", arry_num1, i, cVect[arry_num1][i]);
 	}
 	for (i = 0; i < d; i++) {
-		printf("変化後cVect[%d][%d]=%0.10f\n", arry_num2, i, cVect[arry_num2][i]);
+	printf("変化後cVect[%d][%d]=%0.10f\n", arry_num2, i, cVect[arry_num2][i]);
 	}
 	printf("\n\n");
 	*/
@@ -595,21 +595,21 @@ void QuickSort(double *a, int left, int right) {
 	int pivot_index = (left + right) / 2;  // 適当にここでは中点とします
 	int pivot = a[pivot_index];
 	swap(&a[pivot_index], &a[right - 1]);    // pivot と右端を swap
-	vnVect(pivot_index,right-1);
-	vcVect(pivot_index, right-1);
+	vnVect(pivot_index, right - 1);
+	vcVect(pivot_index, right - 1);
 
 	int i = left; // iterator
 	for (int j = left; j < right - 1; ++j) { // j は全体を眺めて
 		if (a[j] < pivot) { // pivot 未満のがあったら左に詰めていく
 			swap(&a[i++], &a[j]);
-			vnVect((i+1), j);
-			vcVect((i+1), j);
+			vnVect((i + 1), j);
+			vcVect((i + 1), j);
 		}
 	}
 	swap(&a[i], &a[right - 1]); // pivot を適切な場所に挿入
-	vnVect(i , (right-1));
-	vcVect(i , (right-1));
-							  /* 再帰的に解く */
+	vnVect(i, (right - 1));
+	vcVect(i, (right - 1));
+	/* 再帰的に解く */
 	QuickSort(a, left, i);    // 左半分 (pivot 未満)
 	QuickSort(a, i + 1, right); // 右半分 (pivot 以上)
 }
@@ -617,27 +617,27 @@ void QuickSort(double *a, int left, int right) {
 
 /* 配列 a の [left, right) をソートします */
 void QuickSort() {
-	
+
 	int left = 0, right = Np;
 	if (right - left <= 1) return;
 
 	int pivot_index = (left + right) / 2;  // 適当にここでは中点とします
 	double pivot = nFitness[pivot_index];
-	swap(&nFitness[pivot_index],& nFitness[right - 1]);    // pivot と右端を swap
+	swap(&nFitness[pivot_index], &nFitness[right - 1]);    // pivot と右端を swap
 	vnVect(pivot_index, (right - 1));
 	vcVect(pivot_index, (right - 1));
 	int i = left; // iterator
 	for (int j = left; j < right - 1; ++j) { // j は全体を眺めて
 		if (nFitness[j] < pivot) { // pivot 未満のがあったら左に詰めていく
 			swap(&nFitness[i++], &nFitness[j]);
-			vnVect(i+1, j);
-			vcVect(i+1, j);
+			vnVect(i + 1, j);
+			vcVect(i + 1, j);
 		}
 	}
 	swap(&nFitness[i], &nFitness[right - 1]); // pivot を適切な場所に挿入
-	vnVect(i+1, right - 1);
-	vcVect(i+1, right - 1);
-							  /* 再帰的に解く */
+	vnVect(i + 1, right - 1);
+	vcVect(i + 1, right - 1);
+	/* 再帰的に解く */
 	QuickSort(nFitness, left, i);    // 左半分 (pivot 未満)
 	QuickSort(nFitness, i + 1, right); // 右半分 (pivot 以上)
 }
@@ -645,12 +645,12 @@ void QuickSort() {
 
 void  bubbleSort(double *N) {
 	int i, j;
-	double temp,c_temp;
+	double temp, c_temp;
 	double F_temp, CR_temp;
 	for (i = 0; i<Np; i++) {
 		for (j = Np - 1; j>i; j--) {
 			if (N[j] < N[j - 1]) {
-				swap(&N[j],&N[j-1]);
+				swap(&N[j], &N[j - 1]);
 				swap(&cFitness[j], &cFitness[j - 1]);
 				vnVect(j, j - 1);
 				vcVect(j, j - 1);
@@ -693,7 +693,7 @@ void DE_Operation(int i_Np, int g_GSIZE)
 		N = (int)(genrand_real2()*d);
 		L = 0;
 		do {
-			nVect[i_Np][N] = pVect1[N] +MRATE * (pVect2[N] - pVect3[N]);
+			nVect[i_Np][N] = pVect1[N] + MRATE * (pVect2[N] - pVect3[N]);
 			if (nVect[i_Np][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
 			if (nVect[i_Np][N] > Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
 			N = (N + 1) % d;
@@ -749,16 +749,15 @@ void DE_Operation(int i_Np, int g_GSIZE)
 
 	//JADE	DE/rand/exp
 	else if (DeAlgorithmNo == 5) {
-
 		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
-		N = (int)(genrand_real1()*d);
-
-//		printf("best_P%d\n",best_rand_N);
+//		N = (int)(genrand_real1()*d);
+		N = 0;
+		//		printf("best_P%d\n",best_rand_N);
+		best_rand_N = (int)(genrand_real2()*p_best);
 		do {
 			if (genrand_real1()<CR[i_Np] || L == 0) {
-				best_rand_N = (int)(genrand_real2()*p_best);
-				nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np])* (cVect[best_rand_N][N] - cVect[i_Np][N] + (F[i_Np])* (pVect1[N] - pVect2[N]));
+				nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np])* (cVect[best_rand_N][N] - cVect[i_Np][N]) + (F[i_Np])* (pVect1[N] - pVect2[N]);
 				//nVect[i_Np][N] = cVect[i_Np][N] + (F[i_Np] * (gBestVector[N] - cVect[i_Np][N]) + F[i_Np] * (pVect1[N] - pVect2[N]))/2;
 				if (nVect[N][N] < -Range) 	nVect[i_Np][N] = pVect1[N] + genrand_real1() * (-Range - pVect1[N]);
 				if (nVect[i_Np][N] > Range) nVect[i_Np][N] = pVect1[N] + genrand_real1() * (Range - pVect1[N]);
@@ -768,8 +767,9 @@ void DE_Operation(int i_Np, int g_GSIZE)
 				//nVect[i_Np][N] = nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
 			}
 
-			N = (N + 1) % d;
+//			N = (N + 1) % d;
 			L++;
+			N = L;
 		} while (L < d);
 
 	}
@@ -818,24 +818,23 @@ void DE_Operation(int i_Np, int g_GSIZE)
 	}
 	//jde
 	else if (DeAlgorithmNo == 6) {
-/*
+		/*
 		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
 		do {
-			if (genrand_real1() < CR[i_Np] || L == 0) {
-				nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
-				if (nVect[i_Np][N] < -Range) 	nVect[i_Np][N] = pVect1[i_Np] + genrand_real1() * (-Range - pVect1[N]);
-				if (nVect[i_Np][N] > Range)	nVect[i_Np][N] = pVect1[i_Np] + genrand_real1() * (Range - pVect1[N]);
-			}
-			else {
-				nVect[i_Np][N] = cVect[i_Np][N];
-			}
-			N = (N + 1) % d;
-			L++;
-
+		if (genrand_real1() < CR[i_Np] || L == 0) {
+		nVect[i_Np][N] = pVect1[N] + F[i_Np] * (pVect2[N] - pVect3[N]);
+		if (nVect[i_Np][N] < -Range) 	nVect[i_Np][N] = pVect1[i_Np] + genrand_real1() * (-Range - pVect1[N]);
+		if (nVect[i_Np][N] > Range)	nVect[i_Np][N] = pVect1[i_Np] + genrand_real1() * (Range - pVect1[N]);
+		}
+		else {
+		nVect[i_Np][N] = cVect[i_Np][N];
+		}
+		N = (N + 1) % d;
+		L++;
 		} while (L < d);
-*/
+		*/
 		L = 0;
 		for (i = 0; i < d; i++) nVect[i_Np][i] = cVect[i_Np][i];
 		N = (int)(genrand_real1()*d);
@@ -917,7 +916,7 @@ void Initialize() {
 	Init_Vector();
 	Evaluate_Init_Vector();
 	Parameter_Initialization();
-	Initialize_bubbleSort(cFitness);
+	if(DeAlgorithmNo==5) Initialize_bubbleSort(cFitness);
 }
 
 void vJade_Parameter_Format() {
@@ -939,7 +938,7 @@ void vJade_Parameter_Format() {
 		sum_CR += CR[i];
 
 	}
-	
+
 
 }
 
@@ -975,7 +974,7 @@ void vJade_Parameter_Format2() {
 		//		Uf_best = (1 - C)*Uf_best + C * (Sf_best/Sn_best);
 	}
 	else {
-		printf("UF_best=%f\n", Uf_best);
+//		printf("UF_best=%f\n", Uf_best);
 		Uf_best -= 0.01;
 	}
 	if (Uf_rand > 0.9) {
@@ -1022,7 +1021,7 @@ void vJade_Parameter_Format3() {
 		//		Uf_best = (1 - C)*Uf_best + C * (Sf_best/Sn_best);
 	}
 	else {
-		printf("UF_best=%f\n", Uf_best);
+//		printf("UF_best=%f\n", Uf_best);
 		Uf_best -= 0.01;
 	}
 	if (Uf_rand > 0.9) {
@@ -1054,28 +1053,22 @@ void vjde_Parameter_Format() {
 
 //パラメータの更新
 void Parameter_Format(int iDe_nomber) {
-	
-	if (iDe_nomber==5) {
+
+	if (iDe_nomber == 5) {
 		New_parameter();
 		vJade_Parameter_Format();
 	}
-	else if(iDe_nomber == 6||iDe_nomber==7){
+	else if (iDe_nomber == 6 || iDe_nomber == 7) {
 		New_parameter_2();
 		vJade_Parameter_Format2();
 	}
-	else if (iDe_nomber==8) {
+	else if (iDe_nomber == 8) {
 		vjde_Parameter_Format();
 
 	}
 
 
 }
-
-
-
-
-
-
 
 
 

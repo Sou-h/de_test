@@ -68,7 +68,7 @@ void Output_To_File1(void)
 	t_st = localtime(&timer);	//時間の変換
 	sprintf_s(filename, "DE_gBestHistory%04d%02d%02d%02d%02d_DE_NO%d_FUNC_NO%d_NP%d_D%d_C%lf.csv",
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
-		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No,Np,d, C);
+		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, Np, d, C);
 	fp = fopen(filename, "a");
 	for (i = 0; i<MaxGrnration; i++) {
 		for (j = 0; j < EXTIME; j++) {
@@ -218,18 +218,17 @@ int main(void)
 	int j = 0, i = 0;
 	p_best = (int)(NP*P_BEST);
 	for (Func_No = 1; Func_No <= 4; Func_No++) {
-		for (DeAlgorithmNo = 1; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
+		for (DeAlgorithmNo = 5; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
 			//if(DeAlgorithmNo ==5)	Output_To_File4();
 			printf("DeAlgorithmNo=%d\nFunc_No=%d\n", DeAlgorithmNo, Func_No);
-			pop=0,J_rand = 0,j = 0,i = 0;
+			pop = 0, J_rand = 0, j = 0, i = 0;
 			best_Initialize();
 			init_genrand((unsigned)time(NULL));	//MTの初期化
 			for (iteration = 0; iteration < EXTIME; iteration++) {//試行回数
 				Initialize();		//初期化
-
 				while (episode < MaxGrnration) {
 					Select_Elite_Vector(iteration, episode);
-//					Calc_Diversity(iteration, episode);
+					//					Calc_Diversity(iteration, episode);
 					for (pop = 0; pop < Np; pop++) {
 						Select_pVector(pop);
 						DE_Operation(pop, episode);
@@ -241,13 +240,11 @@ int main(void)
 						Uf_best_History[iteration][episode] = Uf_best;
 						Uf_rand_History[iteration][episode] = Uf_rand;
 						printf("Uf_best=%5.2f\nUf_ranf=%5.2f\n", Uf_best, Uf_rand);
-
 					}
-					
 					Parameter_Format(DeAlgorithmNo);
 					Compare_Vector();
-					bubbleSort(nFitness);
-					
+					if(DeAlgorithmNo==5) bubbleSort(nFitness);
+
 					episode++;
 					if (Terminate > gBestFitness) break;
 				}
@@ -260,11 +257,11 @@ int main(void)
 			Output_To_File1();
 			//Output_To_File2();
 			//Output_To_File3();
-/*			if (DeAlgorithmNo == 5 || DeAlgorithmNo==6|| DeAlgorithmNo==7) {
-				Output_To_File4();
-				Output_To_File5();
+			/*			if (DeAlgorithmNo == 5 || DeAlgorithmNo==6|| DeAlgorithmNo==7) {
+			Output_To_File4();
+			Output_To_File5();
 			}
-*/		
+			*/
 		}
 
 	}
@@ -281,7 +278,6 @@ printf("変化前nVect[%d][%d]=%0.10f\n", i, j, nVect[i][j]);
 printf("\n");
 }
 printf("\n\n");
-
 for (i = 0; i < Np; i++) {
 printf("変化前nFitness[%d]=%0.10f\n", i, nFitness[i]);
 }
@@ -291,20 +287,16 @@ printf("変化前nFitness[%d]=%0.10f\n", i, nFitness[i]);
 
 /*
 printf("\n");
-
 for (i = 0; i < Np; i++) {
 printf("変化後nFitness[%d]=%0.10f\n", i, nFitness[i]);
 }
-
 printf("\n");
-
 for (i = 0; i < Np; i++) {
 for (j = 0; j < d; j++) {
 printf("変化後nVect[%d][%d]=%0.10f\n", i, j, nVect[i][j]);
 }
 printf("\n");
 }
-
 printf("\n\n");
 */
 
@@ -317,9 +309,7 @@ printf("\n\n");
 for (i = 0; i < Np; i++) {
 printf("変化後nFitness[%d]=%0.10f\n", i, nFitness[i]);
 }
-
 printf("\n");
-
 for (i = 0; i < Np; i++) {
 for (j = 0; j < d; j++) {
 printf("変化後nVect[%d][%d]=%0.10f\n", i, j, nVect[i][j]);

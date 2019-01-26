@@ -70,7 +70,7 @@ void Output_To_File1(void)
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
 		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, Np, d, C);
 	fp = fopen(filename, "a");
-	for (i = 0; i<MaxGrnration; i++) {
+	for (i = 0; i < MaxGrnration; i++) {
 		for (j = 0; j < EXTIME; j++) {
 			fprintf(fp, "%20.70lf,", gBestHistory[j][i]);
 		}
@@ -90,23 +90,23 @@ void Calc_Diversity(int itime, int gtime)
 	double ave[D];		//•½‹Ï
 	double div;					//•ªŽU
 								//‰Šú‰»
-	for (i = 0; i<d; i++) {
+	for (i = 0; i < d; i++) {
 		sum[i] = 0.0;
 		ave[i] = 0.0;
 	}
 	//‡Œv
-	for (i = 0; i<Np; i++) {
-		for (j = 0; j<d; j++) {
+	for (i = 0; i < Np; i++) {
+		for (j = 0; j < d; j++) {
 			sum[j] += cVect[i][j];
 		}
 	}
 	//•½‹Ï
-	for (i = 0; i<d; i++) {
+	for (i = 0; i < d; i++) {
 		ave[i] = sum[i] / Np;
 	}
 	//•ªŽU
-	for (i = 0, div = 0.0; i<Np; i++) {
-		for (j = 0; j<d; j++) {
+	for (i = 0, div = 0.0; i < Np; i++) {
+		for (j = 0; j < d; j++) {
 			div += (ave[j] - cVect[i][j])*(ave[j] - cVect[i][j]);
 		}
 	}
@@ -128,8 +128,8 @@ void Output_To_File2(void)
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
 		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No);
 	fp = fopen(filename, "a");
-	for (i = 0; i<MaxGrnration; i++) {
-		for (j = 0; j<EXTIME; j++) {
+	for (i = 0; i < MaxGrnration; i++) {
+		for (j = 0; j < EXTIME; j++) {
 			fprintf(fp, "%20.35lf\t", pDiversity[j][i]);
 		}
 		fprintf(fp, "\n");
@@ -153,7 +153,7 @@ void Output_To_File3(void)
 		t_st->tm_year + 1900, t_st->tm_mon + 1,
 		t_st->tm_mday, t_st->tm_hour, t_st->tm_min, DeAlgorithmNo, Func_No, C);
 	fp = fopen(filename, "a");
-	for (i = 0; i<EXTIME; i++) {
+	for (i = 0; i < EXTIME; i++) {
 		fprintf(fp, "%6d %d\n", gTable[i], sRate[i]);
 	}
 	fclose(fp);
@@ -173,8 +173,8 @@ void Output_To_File4(void)
 		DeAlgorithmNo, Func_No, NP, D);
 	fp = fopen(filename, "a");
 
-	for (i = 0; i <MaxGrnration; i++) {
-		for (j = 0; j <EXTIME; j++) {
+	for (i = 0; i < MaxGrnration; i++) {
+		for (j = 0; j < EXTIME; j++) {
 			fprintf(fp, "%.5lf\t", Uf_rand_History[j][i]);
 			printf("%lf\n", Uf_rand_History[j][i]);
 		}
@@ -198,8 +198,8 @@ void Output_To_File5(void)
 		DeAlgorithmNo, Func_No, NP, D);
 	fp = fopen(filename, "a");
 
-	for (i = 0; i <MaxGrnration; i++) {
-		for (j = 0; j <EXTIME; j++) {
+	for (i = 0; i < MaxGrnration; i++) {
+		for (j = 0; j < EXTIME; j++) {
 			fprintf(fp, "%.5lf\t", Uf_best_History[j][i]);
 		}
 		fprintf(fp, "\n");
@@ -218,7 +218,7 @@ int main(void)
 	int j = 0, i = 0;
 	p_best = (int)(NP*P_BEST);
 	for (Func_No = 1; Func_No <= 4; Func_No++) {
-		for (DeAlgorithmNo = 5; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
+		for (DeAlgorithmNo = 1; DeAlgorithmNo <= 5; DeAlgorithmNo++) {
 			//if(DeAlgorithmNo ==5)	Output_To_File4();
 			printf("DeAlgorithmNo=%d\nFunc_No=%d\n", DeAlgorithmNo, Func_No);
 			pop = 0, J_rand = 0, j = 0, i = 0;
@@ -226,6 +226,7 @@ int main(void)
 			init_genrand((unsigned)time(NULL));	//MT‚Ì‰Šú‰»
 			for (iteration = 0; iteration < EXTIME; iteration++) {//ŽŽs‰ñ”
 				Initialize();		//‰Šú‰»
+
 				while (episode < MaxGrnration) {
 					Select_Elite_Vector(iteration, episode);
 					//					Calc_Diversity(iteration, episode);
@@ -240,10 +241,12 @@ int main(void)
 						Uf_best_History[iteration][episode] = Uf_best;
 						Uf_rand_History[iteration][episode] = Uf_rand;
 						printf("Uf_best=%5.2f\nUf_ranf=%5.2f\n", Uf_best, Uf_rand);
+
 					}
+
 					Parameter_Format(DeAlgorithmNo);
 					Compare_Vector();
-					if(DeAlgorithmNo==5) bubbleSort(nFitness);
+					bubbleSort(nFitness);
 
 					episode++;
 					if (Terminate > gBestFitness) break;
@@ -257,11 +260,11 @@ int main(void)
 			Output_To_File1();
 			//Output_To_File2();
 			//Output_To_File3();
-			/*			if (DeAlgorithmNo == 5 || DeAlgorithmNo==6|| DeAlgorithmNo==7) {
-			Output_To_File4();
-			Output_To_File5();
+/*			if (DeAlgorithmNo == 5 || DeAlgorithmNo==6|| DeAlgorithmNo==7) {
+				Output_To_File4();
+				Output_To_File5();
 			}
-			*/
+*/
 		}
 
 	}
